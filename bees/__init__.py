@@ -1,4 +1,4 @@
-from .zbee import ZBee
-from .wxbee import WXBee
-from .hbee import HealthBee
+__version__ = '5c2219ab'
+__author__ 'nosoyyo'
+
 from .abstractbee import AbstractBee
