@@ -1,7 +1,9 @@
+__version__ = '5c22fd11'
+__author__ = 'nosoyyo'
+
 import os
 import json
 import time
-import redis
 import requests
 from bs4 import BeautifulSoup
 
@@ -11,30 +13,17 @@ from .utils import GeneralResp, slowDown, sigmaActions
 
 class AbstractBee():
     '''
-    Gerenralized crawler. Must contain `cpool` if not `site_obj` for redis.
+    Gerenralized micro agent. 
 
     :method _SOUP: return BeautifulSoup(resp.text)
     :method _DOWNLOAD: return bytes or save file_name to local storage.
     '''
 
-    def __init__(self, site_obj=None, _session=None, cpool=None):
+    def __init__(self, cookies_file=None, cookies_dict=None):
 
-        if site_obj:
-            self.cpool = site_obj.cpool
-            self.cookies = site_obj.cookies
-            self.headers = site_obj.headers
-        elif _session:
-            self.cpool = cpool
-            self.cookies = _session.cookies
-            self.headers = _session.headers
-        else:
-            self.cpool = redis.ConnectionPool(host='localhost',
-                                    port=6379,
-                                    decode_responses=True,
-                                    db=0)
-            self.cookies = {}
-            self.headers = {}
-        self.r = redis.Redis(connection_pool=self.cpool)
+    
+        self.cookies = {}
+        self.headers = {}
         self.s = _session or requests.Session()
 
     # TODO
@@ -72,7 +61,7 @@ AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36'
         except Exception as e:
             print(f'some {e} happens during _GET')
         finally:
-            sigmaActions(self.r, occur)
+            sigmaActions(occur)
 
         if 'file' in kwargs:
             return resp.content
@@ -97,13 +86,14 @@ AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36'
         _params = _params or {}
 
         try:
+            occur = time.time()
             resp = self.s.post(url, cookies=self.cookies,
                                headers=headers, json=_data, params=_params)
             return GeneralResp(resp)
         except Exception:
             raise BumbleBeeError()
         finally:
-            sigmaActions(self.r, time.time())
+            sigmaActions(occur)
 
     @slowDown
     def _DELETE(self, url: str) -> str:
