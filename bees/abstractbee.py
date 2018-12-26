@@ -24,7 +24,7 @@ class AbstractBee():
     
         self.cookies = {}
         self.headers = {}
-        self.s = _session or requests.Session()
+        self.s = requests.Session()
 
     # TODO
     def detectCookiesExpire(self):
@@ -37,6 +37,13 @@ class AbstractBee():
         except Exception:
             return False
 
+    def _checkUA(self, headers: dict) -> dict:
+        ua = 'User-Agent'
+        if ua not in headers.keys() and ua.lower() not in headers.keys():
+            headers[ua] = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_2) \
+AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36'
+        return headers
+
     @slowDown
     def _GET(self,
              url: str,
@@ -48,10 +55,7 @@ class AbstractBee():
         '''
         resp = None
         headers = headers or self.headers.copy()
-        ua = 'User-Agent'
-        if not headers[ua] or not headers[ua.lower()]:
-            headers[ua] = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_2) \
-AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36'
+        headers = self._checkUA(headers)
         _params = _params or {}
 
         try:
@@ -77,7 +81,7 @@ AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36'
         '''
 
         headers = headers or self.headers.copy()
-
+        headers = self._checkUA(headers)
         content_type = {'Content-Type': 'application/json;charset=UTF-8'}
         headers.update(content_type)
         print(f"Content-Type: {headers['Content-Type']}")
